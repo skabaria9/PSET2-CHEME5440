@@ -72,7 +72,6 @@ function srk_ps2_balances(t,x)
     rib_per_cell = 27000 #ribosomes/cell
     #Ribosome concentration
     R_L = rib_per_cell/(6.02*10^23)/(vol_cell*mass_cell_water)*1000 #mM
-    R_L_gDW =
 
     #kI for m or p (Bionumbers)
     #Closed to open complex = k2 = .024 s-1 (McClure Paper)
@@ -117,13 +116,13 @@ function srk_ps2_balances(t,x)
 
     #Set-up subfunction for f fractions
     n = 1.5 #assumption for all, from pset 1
-    w1_pset1 = 0.03; #for constant background translation, Assume none
-    w2_pset1 = 300; #for I
-    w1_assume = 100;
-    w2_assume = 100;
-    w3_assume = 100;
-    w4_assume = 100;
-    kc_pset1 = 100;#mM
+    w1_pset1 = 0.0; #for constant background translation, Assume none
+    w2_pset1 = 300; #for I on p1
+    w1_assume = 100; #for p1 on p2 and p3
+    w2_assume = 100; #for p2 on p3
+    w3_assume = 100; #for p3 on p2
+    w4_assume = 100; #extra
+    kc_pset1 = 100; #mM, to use in f
     #f as a function of some input
     f(j) = (j^n)/(kc_pset1^n + j^n)
 
