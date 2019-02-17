@@ -24,7 +24,7 @@ function srk_ps2_balances(t,x)
     Ll_2 = Lx_2/3; #AA
     Ll_3 = Lx_3/3; #AA
     doubletime = 30; #minutes
-    dilution = .693/doubletime; #min^-1
+    dil_rate = .693/doubletime; #min^-1
     mass_cell_water = 0.7 #percent
     copies_per_cell = 200; #200 copies
 
@@ -50,9 +50,9 @@ function srk_ps2_balances(t,x)
     #kej for each mi
     e_X = 42; # nt/sec, rate
     ke_mchar = e_X/Lx_char*60 #min-1, characteristic length
-    ke_m1 = ke_mchar * Lx_mchar/Lx_1 #min^-1
-    ke_m2 = ke_mchar * Lx_mchar/Lx_2 #min^-1
-    ke_m3 = ke_mchar * Lx_mchar/Lx_3 #min^-1
+    ke_m1 = ke_mchar * Lx_char/Lx_1 #min^-1
+    ke_m2 = ke_mchar * Lx_char/Lx_2 #min^-1
+    ke_m3 = ke_mchar * Lx_char/Lx_3 #min^-1
     #kej for each pi
     e_L = 14.5*60 #AA/min
     #https://bionumbers.hms.harvard.edu/bionumber.aspx?id=100233&ver=8&trm=translation+rate+e+coli&org=
@@ -95,25 +95,39 @@ function srk_ps2_balances(t,x)
     tau_p3 = ke_p3/kI_p
 
     #-----------------------------------------------------------------
+    #Set-up Inducer Concentration
+    #-----------------------------------------------------------------
+
+    #Set up time dependence on I
+    if t<60 #before 60 min
+       I = 10 #mM
+    else #after 60 min
+        I = 0 #mM
+    end
+
+    #Make I constant (for troublshooting)
+    #I=10
+
+    #-----------------------------------------------------------------
     #Set-up promoter control rates
     #-----------------------------------------------------------------
 
     #Set-up subfunction for f fractions
     n = 1.5 #assumption for all, from pset 1
-    w1_pset1 = 0.26; #for constant background translation
-    w2_pset1 = 300; #for I
-    w1_assume = 100;
-    w2_assume = 100;
-    w3_assume = 100;
-    w4_assume = 100;
-    kc_pset1 = 0.30;#mM
+    w1_pset1 = 0.0; #for constant background translation, Assume none
+    w2_pset1 = 10; #for I
+    w1_assume = 10;
+    w2_assume = 10;
+    w3_assume = 10;
+    w4_assume = 10;
+    kc_pset1 = 10;#mM
     #f as a function of some input
     f(j) = (j^n)/(kc_pset1^n + j^n)
 
     #Set-up the different u
-    u_m1 = (w1_pset + w2_pset1*f(I))/(1+w1_pset + w2_pset1*f(I))
-    u_m2 = (w1_pset + w1_assume*f(p1) + w3_assume*f(p3))/(1+w1_pset + w1_assume*f(p1) + w3_assume*f(p3))
-    u_m3 = (w1_pset + w1_assume*f(p1) + w2_assume*f(p2))/(1+w1_pset + w1_assume*f(p1) + w2_assume*f(p2))
+    u_m1 = (w1_pset1 + w2_pset1*f(I))/(1+w1_pset1 + w2_pset1*f(I))
+    u_m2 = (w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))/(1+w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))
+    u_m3 = (w1_pset1 + w1_assume*f(p1) + w2_assume*f(p2))/(1+w1_pset1 + w1_assume*f(p1) + w2_assume*f(p2))
     #for proteins assume translation happens at the kinetic limit
     u_p1 = 1
     u_p2 = 1
@@ -123,11 +137,11 @@ function srk_ps2_balances(t,x)
     #Set-up TX and TL rates
     #-----------------------------------------------------------------
     r_X1 = ke_m1*R_X*(G_mM/(tau_m1*K_X + (tau_m1+1)*G_mM))
-    r_X2 = 1
-    r_X3 = 1
+    r_X2 = ke_m2*R_X*(G_mM/(tau_m2*K_X + (tau_m2+1)*G_mM))
+    r_X3 = ke_m3*R_X*(G_mM/(tau_m3*K_X + (tau_m3+1)*G_mM))
     r_L1 = ke_p1*R_L*(m1/(tau_p1*K_T + (tau_p1+1)*m1))
-    r_L2 = 1
-    r_L3 = 1
+    r_L2 = ke_p2*R_L*(m2/(tau_p2*K_T + (tau_p2+1)*m2))
+    r_L3 = ke_p3*R_L*(m3/(tau_p3*K_T + (tau_p3+1)*m3))
 
     TX_1 = r_X1 * u_m1
     TX_2 = r_X2 * u_m2
@@ -137,14 +151,15 @@ function srk_ps2_balances(t,x)
     TL_3 = r_L3 * u_p3
 
     #-----------------------------------------------------------------
-    #Set-up ODEs
+    #Set-up Mass Balances(ODEs)
     #-----------------------------------------------------------------
-    #Setup Mass Balances
     dxdt = similar(x)
-    dxdt[1] = k1*(1-C/(0.1+C)) - k2*A - kd_A*A #A
-    dxdt[2] = k2*A - k3*B - kd_B*B #B
-    dxdt[3] = k3*B - kd_C*C #C
-    #dxdt = [A;B;C]*[[-k2-kd_A 0.0 -0.1];[k2 -k3-kd_B 0.0];[0.0 k3 -kd_C]]
+    dxdt[1] = TX_1 - kdeg_m*m1 - dil_rate*m1 #m1
+    dxdt[2] = TX_2 - kdeg_m*m2 - dil_rate*m2 #m2
+    dxdt[3] = TX_3 - kdeg_m*m3 - dil_rate*m3#m3
+    dxdt[4] = TL_1 - kdeg_p*p1 - dil_rate*p1#p1
+    dxdt[5] = TL_2 - kdeg_p*p2 - dil_rate*p2#p2
+    dxdt[6] = TL_3 - kdeg_p*p3 - dil_rate*p3 #p3
     dxdt
 
 end
