@@ -7,9 +7,9 @@ Pkg.add("PyPlot")
 using ODE
 
 #Setup Time Vector
-tStart = 0.0
-tStep = 0.1
-tStop = 10.0
+tStart = 0.0 #min
+tStep = 0.1 #min
+tStop = 10.0 #min
 tSim = collect(tStart:tStep:tStop)
 
 #Setup initial conditions
