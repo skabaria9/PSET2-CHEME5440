@@ -31,16 +31,16 @@ t,X = ode23s(f,x0,tSim; points=:specified)
 m1 = [a[1] for a in X]
 m2 = [a[2] for a in X]
 m3 = [a[3] for a in X]
-p1 = [a[4] for a in X]
-p2 = [a[5] for a in X]
-p3 = [a[6] for a in X]
+p1a = [a[4] for a in X]
+p2a = [a[5] for a in X]
+p3a = [a[6] for a in X]
 
 using PyPlot
 figure(figsize=(4,3))
 figure(1)
-plot(t,p1,color="black")
-plot(t,p2,color="blue")
-plot(t,p3,color="red")
+plot(t,p1a,color="black")
+plot(t,p2a,color="blue")
+plot(t,p3a,color="red")
 xlabel("time (min)")
 ylabel("Concentration (mM)")
 #axis([0, 10, 0, 1])

@@ -115,12 +115,12 @@ function srk_ps2_balances(t,x)
     #Set-up subfunction for f fractions
     n = 1.5 #assumption for all, from pset 1
     w1_pset1 = 0.0; #for constant background translation, Assume none
-    w2_pset1 = 10; #for I
-    w1_assume = 10;
-    w2_assume = 10;
-    w3_assume = 10;
-    w4_assume = 10;
-    kc_pset1 = 10;#mM
+    w2_pset1 = 300; #for I
+    w1_assume = 100;
+    w2_assume = 100;
+    w3_assume = 100;
+    w4_assume = 100;
+    kc_pset1 = 100;#mM
     #f as a function of some input
     f(j) = (j^n)/(kc_pset1^n + j^n)
 
