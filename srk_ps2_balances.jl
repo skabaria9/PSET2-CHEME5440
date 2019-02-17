@@ -14,6 +14,7 @@ function srk_ps2_balances(t,x)
     #-----------------------------------------------------------------
     #Set-up of Parameters
     #-----------------------------------------------------------------
+
     #Input the known values from problem statement
     Lx_char = 1000; #nt
     Lt_char = 333; #AA
@@ -44,8 +45,8 @@ function srk_ps2_balances(t,x)
     dens_cell = 1; #g/L (Assumption because mostly water)
     mol_gene = copies_per_cell / (6.02 * 10^23) #mol
     dryweight_cell = vol_cell*dens_cell*(1-mass_cell_water)
-    G = mol_gene/dryweight_cell/10.0^6 #umol/gDW
-    G_mM = mol_gene/(vol_cell*mass_cell_water)*1000 #mM
+    G_gDW = mol_gene/dryweight_cell*10.0^6 #umol/gDW
+    G_mM = mol_gene/(vol_cell*mass_cell_water)*1000.0 #mM
 
     #kej for each mi
     e_X = 42; # nt/sec, rate
@@ -66,10 +67,12 @@ function srk_ps2_balances(t,x)
     #RNAP concentration
     # https://bionumbers.hms.harvard.edu/bionumber.aspx?id=100194&ver=8&trm=rnap+e+coli+M&org=
     R_X=30*10^-6; #mM
+    R_X_gDW = R_X*1000*(vol_cell*mass_cell_water)/dryweight_cell #umol/gDW
     #Ribosomes per cell, https://bionumbers.hms.harvard.edu/bionumber.aspx?id=108946&ver=4&trm=ribosomes+in+e+coli+concentration&org=
     rib_per_cell = 27000 #ribosomes/cell
     #Ribosome concentration
     R_L = rib_per_cell/(6.02*10^23)/(vol_cell*mass_cell_water)*1000 #mM
+    R_L_gDW =
 
     #kI for m or p (Bionumbers)
     #Closed to open complex = k2 = .024 s-1 (McClure Paper)
@@ -114,7 +117,7 @@ function srk_ps2_balances(t,x)
 
     #Set-up subfunction for f fractions
     n = 1.5 #assumption for all, from pset 1
-    w1_pset1 = 0.0; #for constant background translation, Assume none
+    w1_pset1 = 0.03; #for constant background translation, Assume none
     w2_pset1 = 300; #for I
     w1_assume = 100;
     w2_assume = 100;

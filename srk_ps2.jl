@@ -28,12 +28,15 @@ t,X = ode23s(f,x0,tSim; points=:specified)
 #print(t)
 #print(X)
 
-m1 = [a[1] for a in X]
-m2 = [a[2] for a in X]
-m3 = [a[3] for a in X]
-p1a = [a[4] for a in X]
-p2a = [a[5] for a in X]
-p3a = [a[6] for a in X]
+m1 = [a[1] for a in X] #mM
+m2 = [a[2] for a in X] #mM
+m3 = [a[3] for a in X] #mM
+p1a = [a[4] for a in X] #mM
+p2a = [a[5] for a in X] #mM
+p3a = [a[6] for a in X] #mM
+
+#Convert protein and mRNA concentration from mM to gDW
+
 
 using PyPlot
 figure(figsize=(4,3))
