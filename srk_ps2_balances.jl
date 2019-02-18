@@ -33,20 +33,23 @@ function srk_ps2_balances(t,x)
     #global half life of mRNA = 5 min https://bionumbers.hms.harvard.edu/bionumber.aspx?id=111927&ver=2&trm=mrna+half+life+e+coli&org=
     halflife = 5;  #min
     #convert to seconds
-    halflife2 = 5; #min
+    halflife2 = .022*60; #min
     #convert to degradation rate, assuming first order kinetics
     kdeg_m = .693/halflife2 #min-1
-    #Degradation rate of protein (kdeg_p)
+    #Degradation rate of protein (kdeg_p), bionumbers
     halflife3 = 20*60 #min
     kdeg_p = .693/halflife3 #min-1
 
     #Concentration of gene (G) #umol/gDW
-    vol_cell = 6.7*10.0^-10 * 10.0^-6; #L/cell (Bionumbers, see parameter estimates)
-    dens_cell = 1; #g/L (Assumption because mostly water)
+    #vol_cell = 6.7*10.0^-10*10.0^-6; #L/cell (Bionumbers, see parameter estimates)
+    #https://bionumbers.hms.harvard.edu/bionumber.aspx?id=108815&ver=1&trm=volume+of+e+coli+cell&org=
+    vol_cell = 9e-17 # L/cell, from PSET1 soln BIND: 114922
+    dens_cell = 1.7; #g/L (Bionumbers)
+    #https://bionumbers.hms.harvard.edu/bionumber.aspx?id=109836&ver=5&trm=glazyrina+cell+mass&org=
     mol_gene = copies_per_cell / (6.02 * 10^23) #mol
     dryweight_cell = vol_cell*dens_cell*(1-mass_cell_water)
     G_gDW = mol_gene/dryweight_cell*10.0^6 #umol/gDW
-    G_mM = mol_gene/(vol_cell*mass_cell_water)*1000.0 #mM
+    G_mM = mol_gene*1000/(vol_cell*mass_cell_water) #mM
 
     #kej for each mi
     e_X = 42; # nt/sec, rate
@@ -64,29 +67,31 @@ function srk_ps2_balances(t,x)
     ke_p3 = ke_pchar * Lt_char/Ll_3
 
     #R_X and R_L
-    #RNAP concentration
+    #RNAP concentration = 30 nM
     # https://bionumbers.hms.harvard.edu/bionumber.aspx?id=100194&ver=8&trm=rnap+e+coli+M&org=
     R_X=30*10^-6; #mM
     R_X_gDW = R_X*1000*(vol_cell*mass_cell_water)/dryweight_cell #umol/gDW
     #Ribosomes per cell, https://bionumbers.hms.harvard.edu/bionumber.aspx?id=108946&ver=4&trm=ribosomes+in+e+coli+concentration&org=
     rib_per_cell = 27000 #ribosomes/cell
+    rib_per_cell_umol = rib_per_cell/(6.02*10^23)*10^6 #umol/cell
     #Ribosome concentration
     R_L = rib_per_cell/(6.02*10^23)/(vol_cell*mass_cell_water)*1000 #mM
+    R_L_gDW = rib_per_cell_umol/dryweight_cell #umol/gDW
 
     #kI for m or p (Bionumbers)
     #Closed to open complex = k2 = .024 s-1 (McClure Paper)
-    kI_m = 0.024*60; #min-1, for mRNA m
+    kI_m = 1/25*60; #min-1, for mRNA m
     kI_p = 5 #min-1 for protein p (Bionumbers, https://bionumbers.hms.harvard.edu/bionumber.aspx?id=112001&ver=3&trm=initiation+rate+translation+e+coli&org=)
     #Pai A, You L: Optimal tuning of bacterial sensing potential. Molecular systems biology 2009, 5(286) :286 doi: 10.1038/msb.2009.43. Supplementary Text 2 p.23 top paragraph
 
     #Set up K_X and K_T
     #K_X
     #Find K_x,j = McClureSlope*kI (see paper), converted to units of [mM]
-    McClureSlope = 1.04*10^-3*1/60; #mM*min
+    McClureSlope = 0.12*10^-3*1/60; #mM*min
     K_X = McClureSlope*kI_m #mM
     #K_T
-    McClureSlope_eq = 1.04*10^-3*1/60; #mM*min, #Assumption
-    K_T = McClureSlope_eq*kI_p #mM
+    McClureSlope_eq = 1.04*10^-3*1/60; #mM*min, #Assumption, that is the ribosome slope
+    K_T = kI_p*10 #*1000 (mutlipy by factor for troublshooting) #mM, assume it is the same as kI
 
     #set up tau_m (for mRNA) and tau_p (for protein)
     tau_m1 = ke_m1/kI_m
@@ -118,18 +123,24 @@ function srk_ps2_balances(t,x)
     n = 1.5 #assumption for all, from pset 1
     w1_pset1 = 0.0; #for constant background translation, Assume none
     w2_pset1 = 300; #for I on p1
-    w1_assume = 100; #for p1 on p2 and p3
-    w2_assume = 100; #for p2 on p3
-    w3_assume = 100; #for p3 on p2
+    w1_assume = 300; #for (p1 on p2) and (p1 on p3)
+    w2_assume = 50.0; #for p2 on p3
+    w3_assume = 50; #for p3 on p2
     w4_assume = 100; #extra
-    kc_pset1 = 100; #mM, to use in f
+    kc_pset1 = 300; #mM, to use in f
     #f as a function of some input
     f(j) = (j^n)/(kc_pset1^n + j^n)
 
-    #Set-up the different u
+    #Set-up the different u------------------------------------
+    #-------------For normal (not broken) leave these uncommented
     u_m1 = (w1_pset1 + w2_pset1*f(I))/(1+w1_pset1 + w2_pset1*f(I))
     u_m2 = (w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))/(1+w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))
     u_m3 = (w1_pset1 + w1_assume*f(p1) + w2_assume*f(p2))/(1+w1_pset1 + w1_assume*f(p1) + w2_assume*f(p2))
+    #--------------For broken leave these uncommented
+    #u_m1 = (w1_pset1 + w2_pset1*f(I))/(1+w1_pset1 + w2_pset1*f(I))
+    #u_m2 = (w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))/(1+w1_pset1 + w1_assume*f(p1) + w3_assume*f(p3))
+    #u_m3 = (w1_pset1 + w1_assume*f(p1))/(1+w1_pset1 + w1_assume*f(p1) + w2_assume*f(p2))
+
     #for proteins assume translation happens at the kinetic limit
     u_p1 = 1
     u_p2 = 1
@@ -138,6 +149,7 @@ function srk_ps2_balances(t,x)
     #-----------------------------------------------------------------
     #Set-up TX and TL rates
     #-----------------------------------------------------------------
+
     r_X1 = ke_m1*R_X*(G_mM/(tau_m1*K_X + (tau_m1+1)*G_mM))
     r_X2 = ke_m2*R_X*(G_mM/(tau_m2*K_X + (tau_m2+1)*G_mM))
     r_X3 = ke_m3*R_X*(G_mM/(tau_m3*K_X + (tau_m3+1)*G_mM))
@@ -156,11 +168,11 @@ function srk_ps2_balances(t,x)
     #Set-up Mass Balances(ODEs)
     #-----------------------------------------------------------------
     dxdt = similar(x)
-    dxdt[1] = TX_1 - kdeg_m*m1 - dil_rate*m1 #m1
+    dxdt[1] = TX_1 - kdeg_m*m1 - dil_rate*m1  #m1
     dxdt[2] = TX_2 - kdeg_m*m2 - dil_rate*m2 #m2
-    dxdt[3] = TX_3 - kdeg_m*m3 - dil_rate*m3#m3
-    dxdt[4] = TL_1 - kdeg_p*p1 - dil_rate*p1#p1
-    dxdt[5] = TL_2 - kdeg_p*p2 - dil_rate*p2#p2
+    dxdt[3] = TX_3 - kdeg_m*m3 - dil_rate*m3 #m3
+    dxdt[4] = TL_1 - kdeg_p*p1  -dil_rate*p1 #p1
+    dxdt[5] = TL_2 - kdeg_p*p2 - dil_rate*p2 #p2
     dxdt[6] = TL_3 - kdeg_p*p3 - dil_rate*p3 #p3
     dxdt
 
