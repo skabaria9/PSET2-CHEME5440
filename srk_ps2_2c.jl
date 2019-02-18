@@ -26,7 +26,7 @@ TX0_m2 = 0; #placeholder
 TX0_m3 = 0; #placeholder
 r0 = [ TX0_m1; #m1
       TX0_m2; #m2
-      TX_m1; #m3
+      TX0_m3; #m3
       0.0; #p1
       0.0; #p2
       0.0; #p3
@@ -151,7 +151,10 @@ tSim = collect(tstart:tstep:tend)
 #Empty array for outputs
 x_total = zeros(length(tSim),6);
 
-#Set-up initial
+#Set-up initial A
+
+
+#Set-up initial S
 
 #-----------------------------------------------------------------
 #Set-up Inducer Concentration
